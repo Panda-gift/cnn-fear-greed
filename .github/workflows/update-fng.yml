@@ -10,18 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Descargar JSON de CNN
+      - name: Descargar JSON de Fear & Greed
         run: |
-          codigo=$(curl -s -w "%{http_code}" \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
-            -H "Accept: application/json" \
-            "https://production.dataviz.cnn.io/index/fearandgreed/graphdata" \
+          codigo=$(curl -s -w "%{http_code}" -L \
+            "https://raw.githubusercontent.com/whit3rabbit/fear-greed-data/main/json/cnn_output.json" \
             -o fear_greed.json)
           echo "HTTP code: $codigo"
-          echo "----- primeros 300 caracteres -----"
-          head -c 300 fear_greed.json
-          echo ""
-          echo "-----------------------------------"
+          echo "Tamaño: $(wc -c < fear_greed.json) bytes"
+          head -c 200 fear_greed.json
       - name: Verificar (no aborta)
         run: |
           python3 -c "import json; d=json.load(open('fear_greed.json')); print('OK', d['fear_and_greed']['score'])" || echo "Verificacion fallida (mira el paso anterior)"
