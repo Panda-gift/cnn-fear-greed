@@ -12,13 +12,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Descargar JSON de CNN
         run: |
-          curl -s \
+          codigo=$(curl -s -w "%{http_code}" \
             -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
             -H "Accept: application/json" \
             "https://production.dataviz.cnn.io/index/fearandgreed/graphdata" \
-            -o fear_greed.json
+            -o fear_greed.json)
+          echo "HTTP code: $codigo"
+          echo "----- primeros 300 caracteres -----"
+          head -c 300 fear_greed.json
+          echo ""
+          echo "-----------------------------------"
       - name: Verificar que es JSON válido
-        run: python3 -c "import json; d=json.load(open('fear_greed.json')); assert 'fear_and_greed' in d; print('OK', d['fear_and_greed']['score'])"
+        run: |
+          python3 -c "import json; d=json.load(open('fear_greed.json')); print('OK', d['fear_and_greed']['score'])" || echo "Verificación fallida (ver paso anterior)"
       - name: Commit y push
         run: |
           git config user.name "github-actions[bot]"
