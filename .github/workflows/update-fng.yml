@@ -1,0 +1,28 @@
+name: CNN Fear and Greed
+on:
+  schedule:
+    - cron: '0 23 * * 1-5'   # Lun-Vie 23:00 UTC, tras el cierre de EE.UU.
+  workflow_dispatch:          # permite ejecutarlo a mano
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar JSON de CNN
+        run: |
+          curl -s \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            -H "Accept: application/json" \
+            "https://production.dataviz.cnn.io/index/fearandgreed/graphdata" \
+            -o fear_greed.json
+      - name: Verificar que es JSON válido
+        run: python3 -c "import json; d=json.load(open('fear_greed.json')); assert 'fear_and_greed' in d; print('OK', d['fear_and_greed']['score'])"
+      - name: Commit y push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fear_greed.json
+          git diff --staged --quiet || git commit -m "Update F&G $(date -u +%F)"
+          git push
